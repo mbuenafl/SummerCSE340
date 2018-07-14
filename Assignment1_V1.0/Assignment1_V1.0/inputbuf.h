@@ -1,3 +1,4 @@
+#pragma once
 /*
 * Copyright (C) Rida Bazzi, 2016
 *

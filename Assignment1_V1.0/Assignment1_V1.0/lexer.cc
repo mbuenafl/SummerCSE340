@@ -21,30 +21,30 @@ string reserved[] = { "END_OF_FILE",
 "EQUAL", "COLON", "COMMA", "SEMICOLON",
 "LBRAC", "RBRAC", "LPAREN", "RPAREN",
 "NOTEQUAL", "GREATER", "LESS", "LTEQ", "GTEQ",
-"DOT", "NUM", "ID", "ERROR", "REALNUM", "BASE08NUM", "BASE16NUM" // TODO: Add labels for new token types here (as string)
+"DOT", "NUM", "ID", "ERROR", "REALNUM", "BASE08NUM", "BASE16NUM", "REALNUM" // TODO: Add labels for new token types here (as string)
 };
 
 #define KEYWORDS_COUNT 5
 string keyword[] = { "IF", "WHILE", "DO", "THEN", "PRINT" };
 
-string digit16[] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
-string pdigit16[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
-string digit[] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
-string pdigit[] = { "1" , "2", "3" , "4", "5", "6", "7", "8", "9" };
-string digit8[] = { "0", "1", "2", "3", "4", "5", "6", "7" };
-string pdigit8[] = { "1", "2", "3", "4", "5", "6", "7" };
+string digit16[] = { "0", "1", "2", "3", "4", "5", "6", "7", "8","9", "A", "B", "C", "D", "E", "F" };
+char pdigit16[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+char digit[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+char pdigit[] = { 1 , 2, 3 , 4, 5, 6, 7, 8, 9 };
+char digit8[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+char pdigit8[] = { 1, 2, 3, 4, 5, 6, 7 };
 
 /*
 void LexicalAnalyzer::expect(TokenType type) {
-	LexicalAnalyzer lexer;
-	Token t = lexer.GetToken();
-	if (t.token_type != type) {
-		// Return Error
-		cout << "Syntax Error." << endl;
-	}
-	else {
+LexicalAnalyzer lexer;
+Token t = lexer.GetToken();
+if (t.token_type != type) {
+// Return Error
+cout << "Syntax Error." << endl;
+}
+else {
 
-	}
+}
 }
 */
 
@@ -103,6 +103,12 @@ TokenType LexicalAnalyzer::FindKeywordIndex(string s)
 	return ERROR;
 }
 
+char LexicalAnalyzer::peek_next() {
+	char peek;
+	input.GetChar(peek);
+	input.UngetChar(peek);
+	return peek;
+}
 
 Token LexicalAnalyzer::ScanNumber()
 {
@@ -125,12 +131,27 @@ Token LexicalAnalyzer::ScanNumber()
 		}
 		// TODO: You can check for REALNUM, BASE08NUM and BASE16NUM here!
 		//add the rule REALNUM = NUM DOT digit digit*;
-		
 		//add the rule BASE08NUM = ((pdigit8 pdigit8*)+0)(x)(08)
-		
 		//add the rule BASE16NUM = ((pdigit16 pdigit16*)+0)(x)(16)
 		tmp.token_type = NUM;
 		tmp.line_no = line_no;
+		if (c == '.') { // If there is a DOT then just add the rest of the number to your lexeme.
+			tmp.token_type = REALNUM;
+			input.GetChar(c);
+			char peek = peek_next();
+			if (isdigit(peek)) {
+				// if it is a digit that means that there's stuff at the end, add to the lexeme.
+				tmp.lexeme += c;
+				input.GetChar(c);
+				while (!input.EndOfInput() && isdigit(c)) {
+					tmp.lexeme += c;
+					input.GetChar(c);
+				}
+			}
+			else {
+				input.UngetChar(c);
+			}
+		}
 		return tmp;
 	}
 	else {
